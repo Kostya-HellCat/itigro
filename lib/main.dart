@@ -11,57 +11,89 @@ class MyBody extends StatefulWidget {
 
 class MyBodyState extends State<MyBody> {
   var controller = new StreamController<List<String>>.broadcast();
-  List<String> _array = [''];
+  List<String> _array = [];
   int j = 0;
 
-  arrGenerate() async {
-    int i = 0;
-    while (i != 5) {
-      await Future.delayed(const Duration(seconds: 1));
-      _array.add('$i');
-      controller.add(_array);
-      print('Controller add ${i*2} item');
-      i++;
-    }
-  }
-
-//   getJson(i) async{
-//    var response = await http.get('https://randomuser.me/api?results=10'); //https://randomuser.me/api or https://api.github.com/users
-//    if (response.statusCode == 200){
-//      var _jsonMap = json.decode(response.body);
-//      print('${_jsonMap['results'][i]['name']['first']}');
-//      if ((_jsonMap['results'].length - 1 >= i)) {
-//        _nameArray.addAll(['${_jsonMap['results'][i]['name']['first']}']);
-//      }
-//    }
-//    else{
-//      print('Error. Status =  ${response.statusCode} ${response.body}');
+//  arrGenerate() async {
+//    int i = 0;
+//    while (i != 10) {
+//      await Future.delayed(const Duration(seconds: 1));
+//      _array.add('Name$i');
+//      controller.add(_array);
+//      print('Controller add Name$i item');
+//      i++;
 //    }
 //  }
 
-  @override
-  Widget build(BuildContext context) {
-    arrGenerate();
-
-    return StreamBuilder<List<String>>(
-        stream: controller.stream,
-        builder: (context, snapshot) {
-          return ListView.builder(itemBuilder: (context, index) {
-            if (index.isOdd) return new Divider();
-            index = index ~/ 2;
-            if (_array[index] != null) {
-              print('$index, будет выведено ${_array[index]}');
-
-              return new Text('${_array[index]}');
-            }
-            else{
-              return new Text('');
-            }
-
-          });
-        }
-    );
+   getJson(i) async{
+    var response = await http.get('https://randomuser.me/api?results=10'); //https://randomuser.me/api or https://api.github.com/users
+    if (response.statusCode == 200){
+      var _jsonMap = json.decode(response.body);
+      print('${_jsonMap['results'][i]['name']['first']}');
+      if ((_jsonMap['results'].length - 1 >= i)) {
+        _array.add('${_jsonMap['results'][i]['name']['first']}');
+        controller.add(_array);
+      }
+    }
+    else{
+      print('Error. Status =  ${response.statusCode} ${response.body}');
+    }
   }
+
+  @override
+
+  Widget build(BuildContext context) {
+
+     getJson(1);
+     
+     return RefreshIndicator(child: StreamBuilder<List<String>>(
+         stream: controller.stream,
+         builder: (context, snapshot) {
+           if (snapshot.data != null) {
+             return ListView.builder(
+                 physics: const AlwaysScrollableScrollPhysics(),
+                 itemBuilder: (context, index) {
+                   if (index.isOdd) return new Divider();
+                   index = index ~/ 2;
+                   //getJson(index);
+                   //print('$index, будет выведено ${snapshot.data[index]}');
+                   return Text('${snapshot.data[index]}');
+                 },
+                 itemCount: snapshot.data.length*2);
+           }
+           else{
+             return Container();
+           }
+         }
+     ),
+         onRefresh: () => getJson(2));
+  }
+  
+//  Widget build(BuildContext context) {
+//
+//    getJson(0);
+//
+//    return StreamBuilder<List<String>>(
+//        stream: controller.stream,
+//        builder: (context, snapshot) {
+//          if (snapshot.data != null) {
+//            return ListView.builder(
+//                physics: const AlwaysScrollableScrollPhysics(),
+//                itemBuilder: (context, index) {
+//                if (index.isOdd) return new Divider();
+//                index = index ~/ 2;
+//                //getJson(index);
+//                //print('$index, будет выведено ${snapshot.data[index]}');
+//                return Text('${snapshot.data[index]}');
+//            },
+//              itemCount: snapshot.data.length*2);
+//          }
+//          else{
+//            return Container();
+//          }
+//        }
+//    );
+//  }
 
 
 }

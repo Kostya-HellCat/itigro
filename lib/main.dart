@@ -11,90 +11,105 @@ class MyBody extends StatefulWidget {
 
 class MyBodyState extends State<MyBody> {
   var controller = new StreamController<List<String>>.broadcast();
+  ScrollController _scrollController = new ScrollController();
   List<String> _array = [];
+  int i = 0;
   int j = 0;
+  int iteration = 0;
+  bool _isLoad = false;
 
-//  arrGenerate() async {
-//    int i = 0;
-//    while (i != 10) {
-//      await Future.delayed(const Duration(seconds: 1));
-//      _array.add('Name$i');
-//      controller.add(_array);
-//      print('Controller add Name$i item');
-//      i++;
+  arrGenerate() async {
+    j = 0;
+    while (j != 17) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      _array.add('Name ${i}');
+      j++;
+      i++;
+    }
+    controller.add(_array);
+  }
+
+//   getJson(i) async{
+//    var response = await http.get('https://randomuser.me/api?results=10'); //https://randomuser.me/api or https://api.github.com/users
+//    if (response.statusCode == 200){
+//      var _jsonMap = json.decode(response.body);
+//      print('${_jsonMap['results'][i]['name']['first']}');
+//      if ((_jsonMap['results'].length - 1 >= i)) {
+//        _array.add('${_jsonMap['results'][i]['name']['first']}');
+//        controller.add(_array);
+//      }
+//    }
+//    else{
+//      print('Error. Status =  ${response.statusCode} ${response.body}');
 //    }
 //  }
 
-   getJson(i) async{
-    var response = await http.get('https://randomuser.me/api?results=10'); //https://randomuser.me/api or https://api.github.com/users
-    if (response.statusCode == 200){
-      var _jsonMap = json.decode(response.body);
-      print('${_jsonMap['results'][i]['name']['first']}');
-      if ((_jsonMap['results'].length - 1 >= i)) {
-        _array.add('${_jsonMap['results'][i]['name']['first']}');
-        controller.add(_array);
-      }
+
+  _scrollListener() {
+    if (_scrollController.offset >= _scrollController.position.maxScrollExtent &&
+        !_scrollController.position.outOfRange) {
+        print("list update");
+        arrGenerate();
     }
-    else{
-      print('Error. Status =  ${response.statusCode} ${response.body}');
-    }
+//    if (_scrollController.offset <= _scrollController.position.minScrollExtent &&
+//        !_scrollController.position.outOfRange) {
+//        print("reach the top");
+//    }
   }
 
   @override
+  void initState() {
+    _scrollController = ScrollController();
+    _scrollController.addListener(_scrollListener);
+    super.initState();
+  }
 
   Widget build(BuildContext context) {
 
-     getJson(1);
-     
-     return RefreshIndicator(child: StreamBuilder<List<String>>(
+    arrGenerate();
+
+     return StreamBuilder<List<String>>(
          stream: controller.stream,
          builder: (context, snapshot) {
+           iteration = 0;
            if (snapshot.data != null) {
              return ListView.builder(
-                 physics: const AlwaysScrollableScrollPhysics(),
-                 itemBuilder: (context, index) {
-                   if (index.isOdd) return new Divider();
-                   index = index ~/ 2;
-                   //getJson(index);
-                   //print('$index, будет выведено ${snapshot.data[index]}');
-                   return Text('${snapshot.data[index]}');
-                 },
-                 itemCount: snapshot.data.length*2);
+               controller: _scrollController,
+               physics: const AlwaysScrollableScrollPhysics(),
+               itemBuilder: (context, index) {
+
+                 if (iteration != 16 || index == 0) {
+                   iteration++;
+                   return Column(
+                     children: <Widget>[
+                       Text('${snapshot.data[index]} ($index , ${index % 19})'),
+                       new Divider()
+                     ]
+                   );
+                 }
+                 else{
+                   iteration=0;
+                   return Column(
+                       children: <Widget>[
+                         Text('${snapshot.data[index]} ($index , ${index % 19})'),
+                         new Divider(),
+                         Center(
+                           child: CircularProgressIndicator(),
+                         )
+                       ]
+                   );
+                 }
+               },
+               itemCount: snapshot.data.length
+             );
            }
            else{
              return Container();
            }
          }
-     ),
-         onRefresh: () => getJson(2));
-  }
-  
-//  Widget build(BuildContext context) {
-//
-//    getJson(0);
-//
-//    return StreamBuilder<List<String>>(
-//        stream: controller.stream,
-//        builder: (context, snapshot) {
-//          if (snapshot.data != null) {
-//            return ListView.builder(
-//                physics: const AlwaysScrollableScrollPhysics(),
-//                itemBuilder: (context, index) {
-//                if (index.isOdd) return new Divider();
-//                index = index ~/ 2;
-//                //getJson(index);
-//                //print('$index, будет выведено ${snapshot.data[index]}');
-//                return Text('${snapshot.data[index]}');
-//            },
-//              itemCount: snapshot.data.length*2);
-//          }
-//          else{
-//            return Container();
-//          }
-//        }
-//    );
-//  }
+     );
 
+  }
 
 }
 
